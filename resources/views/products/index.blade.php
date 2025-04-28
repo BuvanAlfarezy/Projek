@@ -15,6 +15,8 @@
             </a>
         </li>
         @endforeach
+        <a href="{{ url('/user/create') }}">Form User</a>
+        <a href="{{ url('/contact/create') }}">Form Contact</a>
     </ul>
 </body>
 </html>
