@@ -2,29 +2,70 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 
 class ProductController extends Controller
 {
-    private $products = [
-        1 => ["name" => "kaos laravel", "price" => 150000],
-        2 => ["name" => "stiker coding", "price" => 250000],
-        3 => ["name" => "notebook dev", "price" => 50000],
-    ];
-
+    // 1. Tampilkan semua produk
     public function index()
     {
-        $products = $this->products;
+        $products = Product::with('category')->get(); // load relasi kategori
         return view('products.index', compact('products'));
     }
 
-
-    public function show($id)
+    // 2. Tampilkan form tambah produk
+    public function create()
     {
-    if (!array_key_exists($id, $this->products)) {
-        abort(404);
+        $categories = Category::all(); // untuk dropdown kategori
+        return view('products.create', compact('categories'));
     }
-        $product = $this->products[$id];
-        return view('products.detail', compact('product'));
+
+    // 3. Simpan produk baru
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string',
+            'price' => 'required|numeric',
+            'category_id' => 'required|exists:categories,id',
+        ]);
+
+        Product::create($request->only(['name', 'price', 'category_id']));
+
+        return redirect()->route('products.index')->with('success', 'Produk berhasil ditambahkan.');
+    }
+
+    // 4. Tampilkan form edit
+    public function edit($id)
+    {
+        $product = Product::findOrFail($id);
+        $categories = Category::all();
+        return view('products.edit', compact('product', 'categories'));
+    }
+
+    // 5. Update produk
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required|string',
+            'price' => 'required|numeric',
+            'category_id' => 'required|exists:categories,id',
+        ]);
+
+        $product = Product::findOrFail($id);
+        $product->update($request->all());
+
+        return redirect()->route('products.index')->with('success', 'Produk berhasil diperbarui.');
+    }
+
+    // 6. Hapus produk
+    public function destroy($id)
+    {
+        $product = Product::findOrFail($id);
+        $product->delete();
+
+        return redirect()->route('products.index')->with('success', 'Produk berhasil dihapus.');
     }
 }
